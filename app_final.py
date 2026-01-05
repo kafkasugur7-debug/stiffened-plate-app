@@ -40,8 +40,9 @@ def modelleri_yukle():
         try:
             model = joblib.load(tam_yol)
             yuklenen_modeller[gorunen_isim] = model
-        except:
-            pass
+        except Exception as e:
+            # HATA VARSA ARTIK GİZLEMİYORUZ, EKRANA YAZIYORUZ
+            st.error(f"⚠️ {gorunen_isim} ({dosya_adi}) yüklenemedi! Hata: {e}")
             
     return yuklenen_modeller
 
@@ -204,4 +205,5 @@ if st.session_state['hesaplandi']:
         st.pyplot(plt)
 
 else:
+
     st.info("👈 Sonuçları görmek için sol menüden değerleri girip butona basın.")
