@@ -5,9 +5,6 @@ import joblib
 import matplotlib.pyplot as plt
 import os
 
-# ----------------------------------------------------------------
-# AYARLAR VE TASARIM
-# ----------------------------------------------------------------
 st.set_page_config(
     page_title="Stiffened Plate Frekans Tahmincisi",
     page_icon="🏗️",
@@ -19,9 +16,6 @@ st.markdown("""
 Bu arayüz, **Number of Stiffeners, Plate Slenderness Ratio, Stiffener Height to Plate Thickness Ratio, Stiffener Width to Plate Thickness Ratio** parametrelerini kullanarak ML modelleri ve **GEP formülü** ile tahmin yapar.
 """)
 
-# ----------------------------------------------------------------
-# 1. DOSYA YOLU VE MODEL YÜKLEME
-# ----------------------------------------------------------------
 MODEL_KLASORU = "."
 
 @st.cache_resource
@@ -48,9 +42,7 @@ def modelleri_yukle():
 
 ml_models = modelleri_yukle()
 
-# ----------------------------------------------------------------
-# 2. GEP FORMÜLÜ (v4)
-# ----------------------------------------------------------------
+
 def gep_hesapla_v4(nos, bpt, shpt, swpt):
     # GeneXproTools v5.0 Model (v4)
     G1C0 = 2.41533020894101
@@ -70,29 +62,19 @@ def gep_hesapla_v4(nos, bpt, shpt, swpt):
 
     return term1 + term2 + term3
 
-# ----------------------------------------------------------------
-# 3. KULLANICI ARAYÜZÜ (INPUT)
-# ----------------------------------------------------------------
 st.sidebar.header("⚙️ Parametre Girişi")
 
-# SİZİN İSTEDİĞİNİZ DEĞERLER VE FORMATLAR:
 nos_val  = st.sidebar.number_input("nos (Number of Stiffeners)", value=2.0, step=1.0, format="%.4f")
 bpt_val  = st.sidebar.number_input("bpt (Breadth/Thickness)", value=140.0, step=0.5, format="%.4f")
 shpt_val = st.sidebar.number_input("shpt (Shape Parameter)", value=9.0, step=0.1, format="%.4f")
 swpt_val = st.sidebar.number_input("swpt (Stiffener Width)", value=1.5, step=0.1, format="%.4f")
 
-# --- KRİTİK DÜZELTME: Session State Kullanımı ---
 if 'hesaplandi' not in st.session_state:
     st.session_state['hesaplandi'] = False
 
-# Butona basılınca state'i True yapıyoruz
 if st.sidebar.button("🚀 Hesapla ve Analiz Et", type="primary"):
     st.session_state['hesaplandi'] = True
 
-# ----------------------------------------------------------------
-# 4. HESAPLAMA VE GÖRSELLEŞTİRME
-# ----------------------------------------------------------------
-# Artık buton yerine session_state kontrol ediyoruz
 if st.session_state['hesaplandi']:
     st.divider()
     
@@ -122,11 +104,9 @@ if st.session_state['hesaplandi']:
     
     df_sonuc = pd.DataFrame(sonuclar)
     
-    # Format hatasını önleyen düzeltme
     df_sonuc["Tahmin"] = pd.to_numeric(df_sonuc["Tahmin"], errors='coerce').fillna(0.0)
     df_sonuc = df_sonuc.sort_values(by="Tahmin", ascending=False)
 
-    # Sekmeler
     tab1, tab2 = st.tabs(["📊 Tahmin Özeti", "📈 Duyarlılık (Trend) Analizi"])
 
     # --- TAB 1: STANDART SONUÇLAR ---
@@ -161,8 +141,7 @@ if st.session_state['hesaplandi']:
     with tab2:
         st.subheader("📈 Parametrik Trend Analizi")
         st.markdown("Seçilen değişkenin değeri **±%50** değiştirildiğinde modellerin tepkisi:")
-        
-        # Selectbox artık sayfayı yenilese bile 'hesaplandi' True olduğu için buraya tekrar girecek
+              
         degisken = st.selectbox("Analiz edilecek değişkeni seçin:", ['nos', 'bpt', 'shpt', 'swpt'])
         
         base_val = input_data[degisken]
@@ -172,8 +151,7 @@ if st.session_state['hesaplandi']:
         
         plt.figure(figsize=(10, 6))
         
-        # ML Modelleri Çizimi
-        for isim, model in ml_models.items():
+       for isim, model in ml_models.items():
             temp_input = input_data.copy()
             temp_df = pd.DataFrame([temp_input] * 50)
             temp_df[degisken] = x_axis
@@ -183,8 +161,7 @@ if st.session_state['hesaplandi']:
                 plt.plot(x_axis, preds, label=isim, alpha=0.6, linewidth=2)
             except: pass
             
-        # GEP Modeli Çizimi
-        y_gep = []
+       y_gep = []
         for x in x_axis:
             vals = input_data.copy()
             vals[degisken] = x
@@ -207,3 +184,4 @@ if st.session_state['hesaplandi']:
 else:
 
     st.info("👈 Sonuçları görmek için sol menüden değerleri girip butona basın.")
+
